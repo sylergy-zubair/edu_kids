@@ -19,6 +19,11 @@
 - **Tap targets:** minimum ~56dp effective hit area even if visuals are smaller.
 - **Characters/objects:** rounded, emoji-forward placeholders; avoid sharp scary imagery.
 
+## Typography
+
+- Use the **system UI font** (SF / Roboto) at **large sizes** for short labels (roughly 18–28pt+ on buttons, minimal body copy).
+- Prefer **weight 700–900** on primary actions; keep line length very short so toddlers are not asked to read paragraphs.
+
 ## Motion mood
 
 - Success: bounce + sparkle/confetti burst (short, <1s).

@@ -51,7 +51,7 @@ export function PlayScreen({ navigation, route }: Props) {
   const activity = pathList[index];
 
   useEffect(() => {
-    stopSpeak();
+    void stopSpeak();
     if (!activity) {
       return;
     }
@@ -120,15 +120,7 @@ export function PlayScreen({ navigation, route }: Props) {
 
   return (
     <SafeAreaView style={styles.root} edges={['top', 'left', 'right', 'bottom']}>
-      <View style={styles.header}>
-        <Pressable style={styles.homeChip} onPress={goHome}>
-          <Text style={styles.homeChipTxt}>🏠 Home</Text>
-        </Pressable>
-        <Text style={styles.stepLbl}>
-          {index + 1} / {pathList.length}
-        </Text>
-      </View>
-
+      
       <ScrollView
         style={styles.cardScroll}
         contentContainerStyle={styles.cardScrollContent}
@@ -192,6 +184,11 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
     borderWidth: 3,
     borderColor: 'rgba(255,255,255,0.85)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.08,
+    shadowRadius: 10,
+    elevation: 4,
   },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12 },
   warn: { fontSize: 20, color: colors.text },

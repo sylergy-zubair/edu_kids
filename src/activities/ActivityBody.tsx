@@ -50,7 +50,7 @@ export function ActivityBody({
       setWiggleId(id);
       setTimeout(() => setWiggleId(null), 420);
       playRetrySound();
-      void speak('Try again.');
+      void speak('Try again');
       onWrong();
     },
     [locked, onWrong],

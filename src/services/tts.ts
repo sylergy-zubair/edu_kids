@@ -8,8 +8,17 @@ export async function initTts(): Promise<void> {
   }
   try {
     await Tts.getInitStatus();
-    Tts.setDefaultRate(0.42);
-    Tts.setDefaultPitch(1.05);
+    try {
+      await Tts.setDefaultLanguage('en-US');
+    } catch {
+      try {
+        await Tts.setDefaultLanguage('en');
+      } catch {
+        /* use engine default locale */
+      }
+    }
+    await Tts.setDefaultRate(0.42).catch(() => {});
+    await Tts.setDefaultPitch(1.05).catch(() => {});
     ready = true;
   } catch {
     ready = false;
@@ -19,16 +28,19 @@ export async function initTts(): Promise<void> {
 export async function speak(text: string): Promise<void> {
   try {
     await initTts();
-    Tts.stop();
-    Tts.speak(text);
+    if (!ready) {
+      return;
+    }
+    await Tts.stop();
+    await Tts.speak(text);
   } catch {
     /* visual-only fallback */
   }
 }
 
-export function stopSpeak(): void {
+export async function stopSpeak(): Promise<void> {
   try {
-    Tts.stop();
+    await Tts.stop();
   } catch {
     /* ignore */
   }

@@ -1,5 +1,6 @@
 /**
  * PRD Issue 0.1 — structured content: labels, spoken prompts, visual hints.
+ * Human-readable tables: docs/prd/phase-0-content-catalog.md
  * All prompts are English, short, and listenable (no reading required).
  */
 

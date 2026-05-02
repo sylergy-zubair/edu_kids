@@ -9,6 +9,7 @@ export const colors = {
   yellow: '#FFD93D',
   text: '#2D3436',
   white: '#FFFFFF',
+  red: '#FF4500',
   card: 'rgba(255,255,255,0.92)',
 };
 

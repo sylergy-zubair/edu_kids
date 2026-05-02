@@ -20,18 +20,18 @@ export function Wiggle({
     const loop = Animated.loop(
       Animated.sequence([
         Animated.timing(x, {
-          toValue: 8,
-          duration: 70,
+          toValue: 5,
+          duration: 85,
           useNativeDriver: true,
         }),
         Animated.timing(x, {
-          toValue: -8,
-          duration: 70,
+          toValue: -5,
+          duration: 85,
           useNativeDriver: true,
         }),
         Animated.timing(x, {
           toValue: 0,
-          duration: 70,
+          duration: 85,
           useNativeDriver: true,
         }),
       ]),

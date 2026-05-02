@@ -67,10 +67,71 @@ export type ActivitySpec =
       instruction: string;
     };
 
-import { ANIMALS, COLORS, ROUTINES, SHAPES } from './contentMap';
+import {
+  COLORS,
+  ROUTINES,
+  SHAPES,
+  type ShapeName,
+} from './contentMap';
 
 const byId = <T extends { id: string }>(arr: T[], id: string) =>
   arr.find((x) => x.id === id)!;
+
+/** PRD 2.5 — find color (oversized tokens, mixed distractor shapes). */
+function findColorActivity(id: string, colorId: string): ActivitySpec {
+  const c = byId(COLORS, colorId);
+  const others = shuffle(COLORS.filter((x) => x.id !== colorId)).slice(0, 3);
+  const shapeMix: ShapeName[] = ['square', 'triangle', 'star'];
+  const choices: VisualToken[] = [
+    { id: 'ans', colorHex: c.hex, shape: 'circle' },
+    ...others.map((o, i) => ({
+      id: `d${i}`,
+      colorHex: o.hex,
+      shape: shapeMix[i % shapeMix.length]!,
+    })),
+  ];
+  return {
+    id,
+    kind: 'findFeature',
+    feature: 'color',
+    instruction: `Touch the ${c.promptWord} one.`,
+    choices: shuffle(choices),
+    answerId: 'ans',
+  };
+}
+
+/** PRD 2.5 — find shape (distinct colors per option). */
+function findShapeActivity(id: string, targetShape: ShapeName): ActivitySpec {
+  const s = SHAPES.find((sh) => sh.shape === targetShape)!;
+  const others = shuffle(SHAPES.filter((sh) => sh.shape !== targetShape)).slice(
+    0,
+    3,
+  );
+  const hues = [
+    '#FFD93D',
+    '#9B7EDE',
+    '#FF6B9D',
+    '#3CB371',
+    '#E84A4A',
+    '#3D7AFC',
+  ];
+  const choices: VisualToken[] = [
+    { id: 'ans', colorHex: hues[0]!, shape: targetShape },
+    ...others.map((sh, i) => ({
+      id: `d${i}`,
+      colorHex: hues[(i + 1) % hues.length]!,
+      shape: sh.shape,
+    })),
+  ];
+  return {
+    id,
+    kind: 'findFeature',
+    feature: 'shape',
+    instruction: `Touch the ${s.spoken}.`,
+    choices: shuffle(choices),
+    answerId: 'ans',
+  };
+}
 
 function tapFromColorShape(
   id: string,
@@ -109,7 +170,10 @@ export function shuffledCopy<T>(array: T[]): T[] {
   return shuffle([...array]);
 }
 
-/** 20 functional activities — PRD 3.4 asks for 15+ in path; daily uses first 18 */
+/**
+ * Functional activities (PRD Phase 2). Daily path includes the full ordered set
+ * so every template appears in “Play today” without shifting earlier indices.
+ */
 export const ALL_ACTIVITIES: ActivitySpec[] = [
   tapFromColorShape(
     'tap_red_circle',
@@ -165,32 +229,8 @@ export const ALL_ACTIVITIES: ActivitySpec[] = [
     pileEmoji: '🍎',
     answerValue: 3,
   },
-  {
-    id: 'find_green',
-    kind: 'findFeature',
-    feature: 'color',
-    instruction: 'Touch the green one.',
-    choices: shuffle([
-      { id: 'g', colorHex: byId(COLORS, 'green').hex, shape: 'circle' },
-      { id: 'x1', colorHex: byId(COLORS, 'red').hex, shape: 'circle' },
-      { id: 'x2', colorHex: byId(COLORS, 'blue').hex, shape: 'square' },
-      { id: 'x3', colorHex: byId(COLORS, 'yellow').hex, shape: 'triangle' },
-    ]),
-    answerId: 'g',
-  },
-  {
-    id: 'find_triangle',
-    kind: 'findFeature',
-    feature: 'shape',
-    instruction: 'Touch the triangle.',
-    choices: shuffle([
-      { id: 'tr', colorHex: '#FFD93D', shape: 'triangle' },
-      { id: 'c1', colorHex: '#9B7EDE', shape: 'circle' },
-      { id: 's1', colorHex: '#FF6B9D', shape: 'square' },
-      { id: 'st', colorHex: '#3CB371', shape: 'star' },
-    ]),
-    answerId: 'tr',
-  },
+  findColorActivity('find_green', 'green'),
+  findShapeActivity('find_triangle', 'triangle'),
   tapFromColorShape(
     'tap_yellow_star',
     'yellow',
@@ -316,9 +356,63 @@ export const ALL_ACTIVITIES: ActivitySpec[] = [
     pileEmoji: '⚽',
     answerValue: 4,
   },
+  /** PRD 2.3 — fourth match-sound variation */
+  {
+    id: 'sound_cat',
+    kind: 'matchSound',
+    instruction: 'Listen, then touch.',
+    spokenWord: 'cat',
+    choices: shuffle([
+      { id: 'a', emoji: '🐱' },
+      { id: 'b', emoji: '🐶' },
+      { id: 'c', emoji: '🐻' },
+      { id: 'd', emoji: '🐮' },
+    ]),
+    answerId: 'a',
+  },
+  /** PRD 2.4 — fifth counting variation (1–5) */
+  {
+    id: 'count_one',
+    kind: 'count',
+    instruction: 'How many moons?',
+    count: 1,
+    pileEmoji: '🌙',
+    answerValue: 1,
+  },
+  /** PRD 2.5 — four more color finds (with find_green → five total) */
+  findColorActivity('find_red', 'red'),
+  findColorActivity('find_blue', 'blue'),
+  findColorActivity('find_yellow', 'yellow'),
+  findColorActivity('find_purple', 'purple'),
+  /** PRD 2.5 — four more shape finds (with find_triangle → five total) */
+  findShapeActivity('find_circle', 'circle'),
+  findShapeActivity('find_square', 'square'),
+  findShapeActivity('find_star', 'star'),
+  findShapeActivity('find_heart', 'heart'),
+  /** PRD 2.6 — third drag variation */
+  {
+    id: 'drag_apple_bowl',
+    kind: 'drag',
+    instruction: 'Drag the apple into the bowl.',
+    item: { id: 'apple', emoji: '🍎' },
+    zoneLabel: 'Bowl',
+  },
+  /** PRD 2.7 — additional routine mini-games */
+  {
+    id: 'routine_brush',
+    kind: 'routine',
+    routineId: 'brush_teeth',
+    instruction: 'Time to brush teeth!',
+  },
+  {
+    id: 'routine_clean',
+    kind: 'routine',
+    routineId: 'clean_toys',
+    instruction: 'Let’s clean up toys!',
+  },
 ];
 
-export const DAILY_ACTIVITIES = ALL_ACTIVITIES.slice(0, 18);
+export const DAILY_ACTIVITIES = ALL_ACTIVITIES;
 
 export function getActivityById(id: string): ActivitySpec | undefined {
   return ALL_ACTIVITIES.find((a) => a.id === id);
