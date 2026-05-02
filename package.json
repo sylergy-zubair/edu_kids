@@ -9,6 +9,7 @@
     "start": "node ./scripts/run-rn.cjs start",
     "test": "jest",
     "gen:sfx": "node scripts/generate-sfx-wavs.mjs",
+    "fetch:animals": "node scripts/fetch-animal-sfx.mjs",
     "postinstall": "patch-package"
   },
   "dependencies": {

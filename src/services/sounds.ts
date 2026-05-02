@@ -4,6 +4,9 @@ import SoundPlayer from 'react-native-sound-player';
 /** PRD 3.3 — toddler-friendly level (app mix, not device volume). */
 const SFX_VOLUME = 0.4;
 
+/** Animal clips are slightly louder so real recordings read clearly next to TTS. */
+const ANIMAL_SFX_VOLUME = 0.52;
+
 function playRaw(name: string, ext: string) {
   if (Platform.OS !== 'android') {
     return;
@@ -30,4 +33,29 @@ export function playRetrySound() {
 
 export function playTransitionSound() {
   playRaw('transition', 'wav');
+}
+
+/** Bundled `res/raw/{rawBaseName}.mp3` (Android). Stops any prior SoundPlayer clip. */
+export function playAnimalSound(rawBaseName: string) {
+  if (Platform.OS !== 'android') {
+    return;
+  }
+  try {
+    SoundPlayer.stop();
+    SoundPlayer.playSoundFile(rawBaseName, 'mp3');
+    SoundPlayer.setVolume(ANIMAL_SFX_VOLUME);
+  } catch {
+    /* optional */
+  }
+}
+
+export function stopBundledSound() {
+  if (Platform.OS !== 'android') {
+    return;
+  }
+  try {
+    SoundPlayer.stop();
+  } catch {
+    /* optional */
+  }
 }

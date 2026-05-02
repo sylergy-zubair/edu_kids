@@ -1,12 +1,14 @@
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { AnimalSoundsScreen } from '../screens/AnimalSoundsScreen';
 import { HomeScreen } from '../screens/HomeScreen';
 import { PlayScreen } from '../screens/PlayScreen';
 
 export type RootStackParamList = {
   Home: undefined;
   Play: { mode: 'daily' | 'free' };
+  AnimalSounds: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -22,6 +24,7 @@ export function AppNavigator() {
         }}>
         <Stack.Screen name="Home" component={HomeScreen} />
         <Stack.Screen name="Play" component={PlayScreen} />
+        <Stack.Screen name="AnimalSounds" component={AnimalSoundsScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

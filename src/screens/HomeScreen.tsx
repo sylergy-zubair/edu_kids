@@ -170,6 +170,14 @@ export function HomeScreen({ navigation }: Props) {
               <Text style={styles.freeTxt}>🎲  Free mix</Text>
             </Pressable>
 
+            <Pressable
+              style={({ pressed }) => [styles.animalBtn, pressed && styles.pressed]}
+              onPress={() => navigation.navigate('AnimalSounds')}
+              accessibilityRole="button"
+              accessibilityLabel="Animal sounds">
+              <Text style={styles.animalTxt}>🔊  Animal sounds</Text>
+            </Pressable>
+
             <View style={styles.progressPill}>
               <Text style={styles.progressLbl}>
                 ⭐ {pathStep} / {DAILY_ACTIVITIES.length}
@@ -297,6 +305,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   freeTxt: {
+    fontSize: 20,
+    fontWeight: '800',
+    color: colors.white,
+  },
+  animalBtn: {
+    backgroundColor: colors.playOrange,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.xl * 1.5,
+    borderRadius: radii.pill,
+    borderWidth: 3,
+    borderColor: colors.playOrangeDark,
+    maxWidth: '100%',
+    width: '100%',
+    alignItems: 'center',
+  },
+  animalTxt: {
     fontSize: 20,
     fontWeight: '800',
     color: colors.white,
