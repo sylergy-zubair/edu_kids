@@ -1,5 +1,5 @@
 /**
- * Activity specs for daily path + free play (PRD Phase 2 templates).
+ * Activity specs for daily path (PRD Phase 2 templates).
  */
 
 export type VisualToken = {
@@ -163,11 +163,6 @@ function shuffle<T>(arr: T[]): T[] {
     [a[i], a[j]] = [a[j], a[i]];
   }
   return a;
-}
-
-/** Random order for free-play mode */
-export function shuffledCopy<T>(array: T[]): T[] {
-  return shuffle([...array]);
 }
 
 /**
@@ -335,7 +330,7 @@ export const ALL_ACTIVITIES: ActivitySpec[] = [
       { id: 'd3', colorHex: byId(COLORS, 'yellow').hex, shape: 'square' },
     ],
   ),
-  /** Extra rotations for free play / variety */
+  /** Extra rotations for variety */
   {
     id: 'match_bear',
     kind: 'match',

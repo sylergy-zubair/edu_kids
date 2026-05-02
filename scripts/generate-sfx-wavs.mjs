@@ -93,4 +93,29 @@ write(
   sineTone(0.06, 440, 0.16),
 );
 
+/** Short noise + thump (mosquito squash / slap). Deterministic “noise” for stable builds. */
+function slapSamples(sampleRate = 22050) {
+  const dur = 0.085;
+  const n = Math.floor(sampleRate * dur);
+  const samples = new Float32Array(n);
+  for (let i = 0; i < n; i++) {
+    const t = i / sampleRate;
+    const env = Math.exp(-42 * t);
+    const r =
+      Math.sin(i * 12.9898) * 43758.5453 -
+      Math.floor(Math.sin(i * 12.9898) * 43758.5453);
+    const noise = (r * 2 - 1) * 0.42;
+    const thump =
+      Math.sin(2 * Math.PI * 85 * t) * 0.38 * Math.exp(-22 * t);
+    const crack =
+      i < 100
+        ? Math.sin(2 * Math.PI * 1400 * t) * 0.22 * (1 - i / 100)
+        : 0;
+    samples[i] = Math.max(-1, Math.min(1, (noise + thump + crack) * env));
+  }
+  return samples;
+}
+
+write('slap', slapSamples(sr));
+
 console.log('Wrote wavs to', outDir);

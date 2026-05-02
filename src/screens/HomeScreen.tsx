@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 import {
   Alert,
   Animated,
@@ -7,6 +7,7 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  useWindowDimensions,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -21,10 +22,96 @@ import { DAILY_ACTIVITIES } from '../content/activities';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Home'>;
 
+type HomeGameTile = {
+  id: string;
+  title: string;
+  emoji: string;
+  backgroundColor: string;
+  borderColor: string;
+  accessibilityLabel: string;
+  pulse?: boolean;
+  onPress: () => void;
+};
+
 export function HomeScreen({ navigation }: Props) {
+  const { width: windowWidth } = useWindowDimensions();
   const [pathStep, setPathStep] = React.useState(0);
   const playPulse = useRef(new Animated.Value(1)).current;
   const sunSpin = useRef(new Animated.Value(0)).current;
+
+  const gameTiles = useMemo<HomeGameTile[]>(
+    () => [
+      {
+        id: 'daily',
+        title: 'Mix n Match',
+        emoji: '🎨',
+        backgroundColor: colors.red,
+        borderColor: colors.white,
+        accessibilityLabel: 'Play today',
+        pulse: true,
+        onPress: () => navigation.navigate('Play'),
+      },
+      {
+        id: 'animal',
+        title: 'Animal sounds',
+        emoji: '🦁',
+        backgroundColor: colors.playOrange,
+        borderColor: colors.playOrangeDark,
+        accessibilityLabel: 'Animal sounds',
+        onPress: () => navigation.navigate('AnimalSounds'),
+      },
+      {
+        id: 'obstacle',
+        title: 'Obstacle',
+        emoji: '🪨',
+        backgroundColor: colors.pink,
+        borderColor: '#E85A8C',
+        accessibilityLabel: 'Obstacle jump game',
+        onPress: () => navigation.navigate('ObstacleGame'),
+      },
+      {
+        id: 'mosquito',
+        title: 'Mosquito Hunt',
+        emoji: '🦟',
+        backgroundColor: '#2D8B6F',
+        borderColor: '#1F6B55',
+        accessibilityLabel: 'Mosquito hunt game',
+        onPress: () => navigation.navigate('MosquitoHunt'),
+      },
+      {
+        id: 'cleanup',
+        title: 'Clean-up',
+        emoji: '📦',
+        backgroundColor: '#C19A6B',
+        borderColor: '#9A7349',
+        accessibilityLabel: 'Clean up toys game',
+        onPress: () => navigation.navigate('CleanUp'),
+      },
+      {
+        id: 'baking',
+        title: 'Baking time',
+        emoji: '🍕',
+        backgroundColor: '#E88A3D',
+        borderColor: '#C96E28',
+        accessibilityLabel: 'Baking time pizza game',
+        onPress: () => navigation.navigate('BakingTime'),
+      },
+      {
+        id: 'jigsaw',
+        title: 'Jigsaw',
+        emoji: '🧩',
+        backgroundColor: '#7C4DFF',
+        borderColor: '#5E35B1',
+        accessibilityLabel: 'Jigsaw puzzle game',
+        onPress: () => navigation.navigate('JigsawPuzzle'),
+      },
+    ],
+    [navigation],
+  );
+
+  const grassPad = spacing.xl * 2;
+  const gridGap = spacing.sm;
+  const tileWidth = (windowWidth - grassPad - gridGap) / 2;
 
   const refresh = useCallback(() => {
     getDailyPathIndex()
@@ -139,7 +226,7 @@ export function HomeScreen({ navigation }: Props) {
               </Pressable>
               <Pressable
                 onPress={() => {
-                  speak('Lets play a game').catch(() => {});
+                  speak('Bye bye Hidayah').catch(() => {});
                 }}
                 accessibilityRole="button"
                 accessibilityLabel="Friendly frog"
@@ -148,35 +235,44 @@ export function HomeScreen({ navigation }: Props) {
               </Pressable>
             </View>
 
-            <Pressable
-              onPress={() => navigation.navigate('Play', { mode: 'daily' })}
-              accessibilityRole="button"
-              accessibilityLabel="Play today">
-              <Animated.View
-                style={[
-                  styles.playBtn,
-                  { transform: [{ scale: playPulse }] },
-                ]}>
-                <Text style={styles.playLead}>🎪</Text>
-                <Text style={styles.playTxt}>Let’s play!</Text>
-              </Animated.View>
-            </Pressable>
+            <View style={[styles.gamesGrid, { gap: gridGap }]}>
+              {gameTiles.map((tile) => {
+                const inner = (
+                  <View
+                    style={[
+                      styles.gameTile,
+                      {
+                        width: tileWidth,
+                        backgroundColor: tile.backgroundColor,
+                        borderColor: tile.borderColor,
+                      },
+                    ]}>
+                    <Text style={styles.gameTileEmoji}>{tile.emoji}</Text>
+                    <Text style={styles.gameTileTitle}>{tile.title}</Text>
+                  </View>
+                );
 
-            <Pressable
-              style={({ pressed }) => [styles.freeBtn, pressed && styles.pressed]}
-              onPress={() => navigation.navigate('Play', { mode: 'free' })}
-              accessibilityRole="button"
-              accessibilityLabel="Free play">
-              <Text style={styles.freeTxt}>🎲  Free mix</Text>
-            </Pressable>
-
-            <Pressable
-              style={({ pressed }) => [styles.animalBtn, pressed && styles.pressed]}
-              onPress={() => navigation.navigate('AnimalSounds')}
-              accessibilityRole="button"
-              accessibilityLabel="Animal sounds">
-              <Text style={styles.animalTxt}>🔊  Animal sounds</Text>
-            </Pressable>
+                return (
+                  <Pressable
+                    key={tile.id}
+                    style={({ pressed }) => [
+                      pressed && styles.gameTilePressed,
+                    ]}
+                    onPress={tile.onPress}
+                    accessibilityRole="button"
+                    accessibilityLabel={tile.accessibilityLabel}>
+                    {tile.pulse ? (
+                      <Animated.View
+                        style={{ transform: [{ scale: playPulse }] }}>
+                        {inner}
+                      </Animated.View>
+                    ) : (
+                      inner
+                    )}
+                  </Pressable>
+                );
+              })}
+            </View>
 
             <View style={styles.progressPill}>
               <Text style={styles.progressLbl}>
@@ -238,7 +334,6 @@ const styles = StyleSheet.create({
     paddingTop: spacing.lg,
     paddingBottom: spacing.lg,
     alignItems: 'center',
-    gap: spacing.sm,
     borderTopWidth: 4,
     borderColor: 'rgba(255,255,255,0.35)',
   },
@@ -264,68 +359,38 @@ const styles = StyleSheet.create({
     opacity: 0.95,
   },
   propEmoji: { fontSize: 24 },
-  playBtn: {
+  gamesGrid: {
     marginTop: spacing.md,
-    backgroundColor: colors.red,
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.xl * 2,
-    borderRadius: radii.pill,
-    borderWidth: 4,
-    borderColor: colors.white,
-    maxWidth: '100%',
+    flexDirection: 'row',
+    flexWrap: 'wrap',
     width: '100%',
+    justifyContent: 'center',
+  },
+  gameTile: {
+    borderRadius: radii.card,
+    borderWidth: 3,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.sm,
     alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 118,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
+    shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.12,
-    shadowRadius: 8,
-    elevation: 6,
+    shadowRadius: 6,
+    elevation: 4,
   },
-  playLead: { fontSize: 36, marginBottom: 2 },
-  playTxt: {
-    fontSize: 28,
-    fontWeight: '900',
-    color: colors.white,
+  gameTileEmoji: {
+    fontSize: 44,
+    marginBottom: spacing.xs,
   },
-  playSub: {
-    marginTop: 2,
-    fontSize: 17,
-    fontWeight: '700',
-    color: 'rgba(255,255,255,0.92)',
-  },
-  freeBtn: {
-    backgroundColor: colors.lavender,
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.xl * 1.5,
-    borderRadius: radii.pill,
-    borderWidth: 3,
-    borderColor: '#7C5FC7',
-    maxWidth: '100%',
-    width: '100%',
-    alignItems: 'center',
-  },
-  freeTxt: {
-    fontSize: 20,
+  gameTileTitle: {
+    fontSize: 16,
     fontWeight: '800',
     color: colors.white,
+    textAlign: 'center',
   },
-  animalBtn: {
-    backgroundColor: colors.playOrange,
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.xl * 1.5,
-    borderRadius: radii.pill,
-    borderWidth: 3,
-    borderColor: colors.playOrangeDark,
-    maxWidth: '100%',
-    width: '100%',
-    alignItems: 'center',
-  },
-  animalTxt: {
-    fontSize: 20,
-    fontWeight: '800',
-    color: colors.white,
-  },
-  pressed: { opacity: 0.9, transform: [{ scale: 0.98 }] },
+  gameTilePressed: { opacity: 0.92, transform: [{ scale: 0.97 }] },
   progressPill: {
     marginTop: spacing.sm,
     backgroundColor: 'rgba(255,255,255,0.6)',

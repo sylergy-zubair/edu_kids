@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   Pressable,
   ScrollView,
@@ -9,11 +9,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { ActivityBody } from '../activities/ActivityBody';
-import {
-  ALL_ACTIVITIES,
-  DAILY_ACTIVITIES,
-  shuffledCopy,
-} from '../content/activities';
+import { DAILY_ACTIVITIES } from '../content/activities';
 import type { RootStackParamList } from '../navigation/AppNavigator';
 import {
   addCompletedId,
@@ -27,26 +23,17 @@ import { colors, radii, spacing } from '../theme/playgroundTheme';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Play'>;
 
-export function PlayScreen({ navigation, route }: Props) {
-  const mode = route.params.mode;
-  const pathList = useMemo(
-    () =>
-      mode === 'daily' ? DAILY_ACTIVITIES : shuffledCopy(ALL_ACTIVITIES),
-    [mode],
-  );
+export function PlayScreen({ navigation }: Props) {
+  const pathList = DAILY_ACTIVITIES;
 
   const [index, setIndex] = useState(0);
   const [locked, setLocked] = useState(false);
 
   useEffect(() => {
-    if (mode === 'daily') {
-      void getDailyPathIndex().then((i) =>
-        setIndex(Math.min(Math.max(0, i), pathList.length - 1)),
-      );
-    } else {
-      setIndex(0);
-    }
-  }, [mode, pathList.length]);
+    void getDailyPathIndex().then((i) =>
+      setIndex(Math.min(Math.max(0, i), pathList.length - 1)),
+    );
+  }, [pathList.length]);
 
   const activity = pathList[index];
 
@@ -77,9 +64,7 @@ export function PlayScreen({ navigation, route }: Props) {
     const next = index + 1;
     if (next >= pathList.length) {
       playTransitionSound();
-      if (mode === 'daily') {
-        await setDailyPathIndex(0);
-      }
+      await setDailyPathIndex(0);
       void speak('You finished!');
       setTimeout(() => {
         setLocked(false);
@@ -89,14 +74,12 @@ export function PlayScreen({ navigation, route }: Props) {
     }
 
     playTransitionSound();
-    if (mode === 'daily') {
-      await setDailyPathIndex(next);
-    }
+    await setDailyPathIndex(next);
     setTimeout(() => {
       setIndex(next);
       setLocked(false);
     }, 1050);
-  }, [activity, goHome, index, mode, pathList.length]);
+  }, [activity, goHome, index, pathList.length]);
 
   const handleWrong = useCallback(async () => {
     if (!activity) {

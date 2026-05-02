@@ -23,6 +23,11 @@ export function playTapSound() {
   playRaw('tap', 'wav');
 }
 
+/** Short slap / squash (e.g. mosquito hunt). Same mix level as other UI SFX. */
+export function playSlapSound() {
+  playRaw('slap', 'wav');
+}
+
 export function playSuccessSound() {
   playRaw('success', 'wav');
 }
