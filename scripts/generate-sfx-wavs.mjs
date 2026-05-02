@@ -118,4 +118,6 @@ function slapSamples(sampleRate = 22050) {
 
 write('slap', slapSamples(sr));
 
+/** Thunder is a real recording: `src/assets/sounds/thunder.mp3` (see docs/assets-and-licenses.md). */
+
 console.log('Wrote wavs to', outDir);

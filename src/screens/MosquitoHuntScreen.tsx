@@ -271,9 +271,9 @@ const styles = StyleSheet.create({
     flex: 1,
     borderRadius: radii.card,
     overflow: 'hidden',
-    backgroundColor: '#d1d1d1',
+    backgroundColor: '#FFFFFF',
     borderWidth: 3,
-    borderColor: 'rgba(255,255,255,0.75)',
+    borderColor: 'rgba(86, 169, 105, 0.75)',
   },
   bugWrap: {
     position: 'absolute',

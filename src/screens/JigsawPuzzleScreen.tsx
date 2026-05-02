@@ -1,6 +1,8 @@
 import { useFocusEffect } from '@react-navigation/native';
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 import {
+  Animated,
+  PanResponder,
   Pressable,
   StyleSheet,
   Text,
@@ -15,12 +17,20 @@ import { colors, radii, spacing } from '../theme/playgroundTheme';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'JigsawPuzzle'>;
 
-const PIECE_DEFS = [
-  { color: '#FF6B9D', emoji: '⭐' },
-  { color: '#FFD93D', emoji: '🌟' },
-  { color: '#6BCB77', emoji: '✨' },
-  { color: '#4D96FF', emoji: '💫' },
-] as const;
+type PieceDef = {
+  color: string;
+  light: string;
+  emoji: string;
+};
+
+const PIECE_DEFS: PieceDef[] = [
+  { color: '#E91E8C', light: '#FF8BC4', emoji: '⭐' },
+  { color: '#FF9800', light: '#FFE082', emoji: '🌟' },
+  { color: '#00C853', light: '#B9F6CA', emoji: '✨' },
+  { color: '#7C4DFF', light: '#D1C4E9', emoji: '💫' },
+];
+
+type SlotRect = { x: number; y: number; w: number; h: number };
 
 function shuffle<T>(arr: T[]): T[] {
   const a = [...arr];
@@ -43,23 +53,113 @@ function isSolved(order: number[]): boolean {
   return order.every((id, i) => id === i);
 }
 
+function findSlotAt(
+  px: number,
+  py: number,
+  rects: (SlotRect | null)[],
+  pad: number,
+): number | null {
+  for (let i = 0; i < rects.length; i++) {
+    const r = rects[i];
+    if (!r) {
+      continue;
+    }
+    if (
+      px >= r.x - pad &&
+      px <= r.x + r.w + pad &&
+      py >= r.y - pad &&
+      py <= r.y + r.h + pad
+    ) {
+      return i;
+    }
+  }
+  return null;
+}
+
+/** Knob positions follow the piece's *home* slot so shapes stay consistent while dragging. */
 function PuzzlePiece({
   color,
+  light,
   emoji,
   size,
-  selected,
+  homeIndex,
+  lifted,
 }: {
   color: string;
+  light: string;
   emoji: string;
   size: number;
-  selected: boolean;
+  homeIndex: number;
+  lifted: boolean;
 }) {
   const bump = Math.round(size * 0.2);
   const body = Math.round(size * 0.78);
   const offset = (size - body) / 2;
+  const edge = size * 0.04;
+
+  const knob = (style: object) => (
+    <View
+      style={[
+        styles.knob,
+        {
+          width: bump,
+          height: bump,
+          borderRadius: bump / 2,
+          backgroundColor: color,
+          borderColor: light,
+        },
+        style,
+      ]}
+    />
+  );
+
+  const knobs: React.ReactNode[] = [];
+  if (homeIndex === 0 || homeIndex === 2) {
+    knobs.push(
+      knob({
+        right: edge,
+        top: size / 2 - bump / 2,
+      }),
+    );
+  } else {
+    knobs.push(
+      knob({
+        left: edge,
+        top: size / 2 - bump / 2,
+      }),
+    );
+  }
+  if (homeIndex === 0 || homeIndex === 1) {
+    knobs.push(
+      knob({
+        bottom: edge,
+        left: size / 2 - bump / 2,
+      }),
+    );
+  } else {
+    knobs.push(
+      knob({
+        top: edge,
+        left: size / 2 - bump / 2,
+      }),
+    );
+  }
 
   return (
     <View style={{ width: size, height: size }}>
+      <View
+        style={[
+          styles.pieceInnerRing,
+          {
+            width: body + 6,
+            height: body + 6,
+            top: offset - 3,
+            left: offset - 3,
+            borderColor: light,
+            opacity: lifted ? 1 : 0.95,
+          },
+        ]}
+      />
       <View
         style={[
           styles.pieceBody,
@@ -69,56 +169,157 @@ function PuzzlePiece({
             top: offset,
             left: offset,
             backgroundColor: color,
-            borderColor: selected ? '#FFFFFF' : 'rgba(255,255,255,0.92)',
-            borderWidth: selected ? 5 : 3,
-            shadowOpacity: selected ? 0.22 : 0.14,
+            borderColor: lifted ? '#FFFFFF' : light,
+            borderWidth: lifted ? 4 : 3,
+            shadowOpacity: lifted ? 0.35 : 0.18,
+            elevation: lifted ? 8 : 4,
           },
         ]}>
-        <Text style={[styles.pieceEmoji, { fontSize: size * 0.26 }]}>{emoji}</Text>
+        <Text style={[styles.pieceEmoji, { fontSize: size * 0.28 }]}>{emoji}</Text>
       </View>
-      <View
-        style={[
-          styles.knob,
-          {
-            width: bump,
-            height: bump,
-            borderRadius: bump / 2,
-            backgroundColor: color,
-            right: size * 0.04,
-            top: size / 2 - bump / 2,
-            borderColor: 'rgba(255,255,255,0.85)',
-          },
-        ]}
-      />
-      <View
-        style={[
-          styles.knob,
-          {
-            width: bump,
-            height: bump,
-            borderRadius: bump / 2,
-            backgroundColor: color,
-            bottom: size * 0.04,
-            left: size / 2 - bump / 2,
-            borderColor: 'rgba(255,255,255,0.85)',
-          },
-        ]}
-      />
+      {knobs}
     </View>
+  );
+}
+
+function DraggableSlotPiece({
+  slotIndex,
+  pieceId,
+  tileSize,
+  won,
+  draggingSlot,
+  onDragStart,
+  onReleaseComplete,
+}: {
+  slotIndex: number;
+  pieceId: number;
+  tileSize: number;
+  won: boolean;
+  draggingSlot: number | null;
+  onDragStart: (slot: number) => void;
+  onReleaseComplete: (from: number, pageX: number, pageY: number) => void;
+}) {
+  const pan = useRef(new Animated.ValueXY({ x: 0, y: 0 })).current;
+  const scale = useRef(new Animated.Value(1)).current;
+  const def = PIECE_DEFS[pieceId]!;
+  const locked = won;
+  const lifted = draggingSlot === slotIndex;
+
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => !locked,
+      onMoveShouldSetPanResponder: () => !locked,
+      onPanResponderTerminationRequest: () => false,
+      onPanResponderGrant: () => {
+        if (locked) {
+          return;
+        }
+        pan.extractOffset();
+        onDragStart(slotIndex);
+        Animated.spring(scale, {
+          toValue: 1.06,
+          friction: 6,
+          useNativeDriver: false,
+        }).start();
+      },
+      onPanResponderMove: Animated.event([null, { dx: pan.x, dy: pan.y }], {
+        useNativeDriver: false,
+      }),
+      onPanResponderRelease: (e) => {
+        if (locked) {
+          return;
+        }
+        pan.flattenOffset();
+        const { pageX, pageY } = e.nativeEvent;
+        Animated.parallel([
+          Animated.spring(pan, {
+            toValue: { x: 0, y: 0 },
+            friction: 7,
+            tension: 120,
+            useNativeDriver: false,
+          }),
+          Animated.spring(scale, {
+            toValue: 1,
+            friction: 6,
+            useNativeDriver: false,
+          }),
+        ]).start(({ finished }) => {
+          if (finished) {
+            onReleaseComplete(slotIndex, pageX, pageY);
+          }
+        });
+      },
+      onPanResponderTerminate: () => {
+        pan.flattenOffset();
+        Animated.parallel([
+          Animated.spring(pan, {
+            toValue: { x: 0, y: 0 },
+            friction: 7,
+            useNativeDriver: false,
+          }),
+          Animated.spring(scale, {
+            toValue: 1,
+            friction: 6,
+            useNativeDriver: false,
+          }),
+        ]).start(({ finished }) => {
+          if (finished) {
+            onReleaseComplete(slotIndex, -1, -1);
+          }
+        });
+      },
+    }),
+  ).current;
+
+  return (
+    <Animated.View
+      {...panResponder.panHandlers}
+      style={[
+        styles.draggablePiece,
+        {
+          zIndex: lifted ? 50 : 1,
+          transform: [{ translateX: pan.x }, { translateY: pan.y }, { scale }],
+        },
+      ]}
+      accessibilityRole="adjustable"
+      accessibilityLabel={`Puzzle piece ${slotIndex + 1}, drag to swap`}>
+      <PuzzlePiece
+        color={def.color}
+        light={def.light}
+        emoji={def.emoji}
+        size={tileSize}
+        homeIndex={pieceId}
+        lifted={lifted}
+      />
+    </Animated.View>
   );
 }
 
 export function JigsawPuzzleScreen({ navigation }: Props) {
   const { width } = useWindowDimensions();
   const [order, setOrder] = useState<number[]>(() => randomUnsolvedOrder());
-  const [selectedSlot, setSelectedSlot] = useState<number | null>(null);
+  const [draggingSlot, setDraggingSlot] = useState<number | null>(null);
   const [won, setWon] = useState(false);
+
+  const slotRefs = useRef<(View | null)[]>([null, null, null, null]);
+  const slotRects = useRef<(SlotRect | null)[]>([null, null, null, null]);
 
   const tileSize = useMemo(() => {
     const pad = spacing.lg * 2 + spacing.xl * 2;
     const max = Math.min(width - pad, 340);
     return Math.max(120, Math.floor(max / 2) - spacing.sm);
   }, [width]);
+
+  const remeasureSlots = useCallback(() => {
+    for (let i = 0; i < 4; i++) {
+      const node = slotRefs.current[i];
+      if (node) {
+        node.measureInWindow((x, y, w, h) => {
+          slotRects.current[i] = { x, y, w, h };
+        });
+      }
+    }
+  }, []);
 
   useFocusEffect(
     useCallback(() => {
@@ -133,95 +334,88 @@ export function JigsawPuzzleScreen({ navigation }: Props) {
     navigation.navigate('Home');
   }, [navigation]);
 
-  const onSlotPress = useCallback(
-    (slot: number) => {
-      if (won) {
+  const onDragStart = useCallback((slot: number) => {
+    setDraggingSlot(slot);
+  }, []);
+
+  const onReleaseComplete = useCallback(
+    (from: number, pageX: number, pageY: number) => {
+      setDraggingSlot(null);
+      if (won || pageX < 0) {
         return;
       }
-      if (selectedSlot === null) {
-        setSelectedSlot(slot);
+      const rects = slotRects.current;
+      const to = findSlotAt(pageX, pageY, rects, 12);
+      if (to === null || to === from) {
         return;
       }
-      if (selectedSlot === slot) {
-        setSelectedSlot(null);
-        return;
-      }
-      const next = [...order];
-      const tmp = next[selectedSlot]!;
-      next[selectedSlot] = next[slot]!;
-      next[slot] = tmp;
-      setOrder(next);
-      setSelectedSlot(null);
-      if (isSolved(next)) {
-        setWon(true);
-        speak('You did it!').catch(() => {});
-      }
+      setOrder((prev) => {
+        const next = [...prev];
+        const tmp = next[from]!;
+        next[from] = next[to]!;
+        next[to] = tmp;
+        if (isSolved(next)) {
+          setWon(true);
+          speak('You did it!').catch(() => {});
+        }
+        return next;
+      });
     },
-    [order, selectedSlot, won],
+    [won],
   );
 
   const playAgain = useCallback(() => {
     setWon(false);
-    setSelectedSlot(null);
+    setDraggingSlot(null);
     setOrder(randomUnsolvedOrder());
   }, []);
 
   return (
     <SafeAreaView style={styles.root} edges={['top', 'left', 'right', 'bottom']}>
-      <View style={styles.header}>
-        <Pressable
-          style={styles.homeChip}
-          onPress={goHome}
-          accessibilityRole="button"
-          accessibilityLabel="Back to playground">
-          <Text style={styles.homeChipTxt}>🏠 Home</Text>
-        </Pressable>
-        <Text style={styles.title}>Jigsaw</Text>
-      </View>
-
-      <Text style={styles.hint}>Tap two pieces to swap them into the matching spots.</Text>
+    
 
       <View style={styles.boardWrap}>
-        <View style={[styles.grid, { width: tileSize * 2 + spacing.md }]}>
+        <View
+          style={[styles.grid, { width: tileSize * 2 + spacing.md }]}
+          onLayout={remeasureSlots}>
           {[0, 1, 2, 3].map((slot) => {
             const pieceId = order[slot]!;
-            const def = PIECE_DEFS[pieceId]!;
             const home = PIECE_DEFS[slot]!;
             const correct = pieceId === slot;
             return (
-              <Pressable
+              <View
                 key={slot}
-                style={({ pressed }) => [
-                  styles.slot,
-                  { width: tileSize, height: tileSize },
-                  pressed && styles.slotPressed,
-                ]}
-                onPress={() => onSlotPress(slot)}
-                accessibilityRole="button"
-                accessibilityLabel={`Puzzle piece slot ${slot + 1}`}>
+                ref={(el) => {
+                  slotRefs.current[slot] = el;
+                }}
+                onLayout={remeasureSlots}
+                style={[styles.slot, { width: tileSize, height: tileSize }]}>
                 <View
                   style={[
                     styles.slotShadow,
                     {
                       width: tileSize,
                       height: tileSize,
-                      backgroundColor: `${home.color}44`,
-                      borderColor: `${home.color}99`,
+                      backgroundColor: `${home.light}55`,
+                      borderColor: home.color,
                     },
                   ]}
                 />
-                <PuzzlePiece
-                  color={def.color}
-                  emoji={def.emoji}
-                  size={tileSize}
-                  selected={selectedSlot === slot}
+                <DraggableSlotPiece
+                  slotIndex={slot}
+                  pieceId={pieceId}
+                  tileSize={tileSize}
+                  won={won}
+                  draggingSlot={draggingSlot}
+                  onDragStart={onDragStart}
+                  onReleaseComplete={onReleaseComplete}
                 />
                 {correct ? (
                   <View style={styles.checkBadge}>
                     <Text style={styles.checkTxt}>✓</Text>
                   </View>
                 ) : null}
-              </Pressable>
+              </View>
             );
           })}
         </View>
@@ -297,12 +491,20 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     position: 'relative',
   },
-  slotPressed: { opacity: 0.92 },
   slotShadow: {
     position: 'absolute',
     borderRadius: radii.card,
     borderWidth: 3,
     borderStyle: 'dashed',
+  },
+  draggablePiece: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  pieceInnerRing: {
+    position: 'absolute',
+    borderRadius: 20,
+    borderWidth: 3,
   },
   pieceBody: {
     position: 'absolute',
@@ -310,9 +512,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 3 },
-    shadowRadius: 5,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 4 },
+    shadowRadius: 6,
   },
   pieceEmoji: {
     fontWeight: '800',

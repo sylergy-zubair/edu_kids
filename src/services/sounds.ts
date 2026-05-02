@@ -1,8 +1,13 @@
 import { Platform } from 'react-native';
 import SoundPlayer from 'react-native-sound-player';
 
+import thunderMp3 from '../assets/sounds/thunder.mp3';
+
 /** PRD 3.3 — toddler-friendly level (app mix, not device volume). */
 const SFX_VOLUME = 0.4;
+
+/** Thunder reads a bit quiet next to visuals; keep under 1.0. */
+const THUNDER_VOLUME = 0.62;
 
 /** Animal clips are slightly louder so real recordings read clearly next to TTS. */
 const ANIMAL_SFX_VOLUME = 0.52;
@@ -26,6 +31,24 @@ export function playTapSound() {
 /** Short slap / squash (e.g. mosquito hunt). Same mix level as other UI SFX. */
 export function playSlapSound() {
   playRaw('slap', 'wav');
+}
+
+/** Thunder / lightning — bundled MP3 (Wikimedia Commons recording; see docs/assets-and-licenses.md). */
+export function playThunderSound() {
+  try {
+    SoundPlayer.stop();
+    void SoundPlayer.playAsset(thunderMp3);
+    SoundPlayer.setVolume(THUNDER_VOLUME);
+  } catch {
+    if (Platform.OS === 'android') {
+      try {
+        SoundPlayer.playSoundFile('thunder', 'mp3');
+        SoundPlayer.setVolume(THUNDER_VOLUME);
+      } catch {
+        /* optional */
+      }
+    }
+  }
 }
 
 export function playSuccessSound() {

@@ -9,6 +9,8 @@ import { CleanUpScreen } from '../screens/CleanUpScreen';
 import { MosquitoHuntScreen } from '../screens/MosquitoHuntScreen';
 import { ObstacleGameScreen } from '../screens/ObstacleGameScreen';
 import { PlayScreen } from '../screens/PlayScreen';
+import { LightningScreen } from '../screens/LightningScreen';
+import { RainCatcherScreen } from '../screens/RainCatcherScreen';
 
 export type RootStackParamList = {
   Home: undefined;
@@ -19,6 +21,8 @@ export type RootStackParamList = {
   CleanUp: undefined;
   BakingTime: undefined;
   JigsawPuzzle: undefined;
+  RainCatcher: undefined;
+  Lightning: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -40,6 +44,8 @@ export function AppNavigator() {
         <Stack.Screen name="CleanUp" component={CleanUpScreen} />
         <Stack.Screen name="BakingTime" component={BakingTimeScreen} />
         <Stack.Screen name="JigsawPuzzle" component={JigsawPuzzleScreen} />
+        <Stack.Screen name="RainCatcher" component={RainCatcherScreen} />
+        <Stack.Screen name="Lightning" component={LightningScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );
