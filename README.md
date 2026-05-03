@@ -1,130 +1,145 @@
-This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
+# 🎨 Cartoon Learning Playground ✨
 
-# Getting Started
+A **React Native** app built for young children: bright colors, big touch targets, sound effects 🔊, and short voice prompts 🗣️. The home screen is a grid of small **activities** and **mini-games**—tap an icon and jump straight in. There is also a **daily “Mix n Match” path** with simple tap, match, and counting challenges that save progress on the device 💾.
 
-> **Note**: Make sure you have completed the [Set Up Your Environment](https://reactnative.dev/docs/set-up-your-environment) guide before proceeding.
+This repo is meant to run on **real phones and tablets** 📱 (touch and speakers matter more than a mouse). It works on **Android** 🤖 and **iOS** 🍎.
 
-## Step 1: Start Metro
+---
 
-First, you will need to run **Metro**, the JavaScript build tool for React Native.
+## 🎮 What’s inside
 
-To start the Metro dev server, run the following command from the root of your React Native project:
+| Emoji | Activity | What kids do |
+|-------|----------|----------------|
+| 🎨 | **Mix n Match** | Daily-style activities: follow the voice, pick the right picture, match sounds, and light counting. |
+| 🦁 | **Animal sounds** | Tap an animal to hear a short real-world clip. |
+| 🪨 | **Obstacle** | Help a cat 🐈 jump over rocks, trees, and walls. |
+| 🦟 | **Mosquito Hunt** | Tap pests before they get away. |
+| 📦 | **Clean-up** | Sort toys into the right boxes. |
+| 🍕 | **Baking time** | Drag toppings onto a pizza and “bake” it. |
+| 🧩 | **Jigsaw** | Drag bright puzzle pieces to swap them until the picture lines up. |
+| 🌧️ | **Rain catcher** | Move an umbrella ☂️ to catch rain and keep a cat dry. |
+| ⚡ | **Lightning** | Night sky with clouds—tap a cloud for lightning and thunder. |
+| 🌙 | **Moonsight** | Clear clouds ☁️ to find the hidden moon 🌕, then tap it. |
+
+**✨ Nice touches (for grown-ups):** many screens include a **Home** 🏠 control to return to the grid, **text-to-speech** for short phrases, and **accessibility labels** on buttons. A long-press on the home **reset** hint (for adults) can clear stored daily progress when testing.
+
+---
+
+## 🧰 Tech stack (short version)
+
+- ⚛️ **React Native** 0.85, **React** 19, **TypeScript**
+- 🧭 **React Navigation** (stack navigator, no default header—each screen designs its own top area)
+- 🗣️ **Text-to-speech** (`react-native-tts`) and 🔊 **sound effects** (`react-native-sound-player` + bundled Android `raw` audio)
+- 💾 **AsyncStorage** for light on-device progress
+
+No heavy game engine: most visuals are **emoji**, simple **Views**, and motion from **React Native’s Animated API** and a few **PanResponder** drags ✋
+
+---
+
+## 📋 What you need on your machine
+
+- 🟢 **Node.js** — see `package.json` → `engines` for supported versions (Node 20+ is a safe bet).
+- 🛠️ A working **React Native** environment: JDK / Android Studio for Android, Xcode for iOS. If you are new to this, start with the official [Environment setup](https://reactnative.dev/docs/set-up-your-environment) guide.
+
+---
+
+## 🚀 Run the app
+
+From the project root:
 
 ```sh
-# Using npm
-npm start
-
-# OR using Yarn
-yarn start
+npm install
 ```
 
-## Step 2: Build and run your app
-
-With Metro running, open a new terminal window/pane from the root of your React Native project, and use one of the following commands to build and run your Android or iOS app:
-
-### Android
+Start the Metro bundler (keep this terminal open):
 
 ```sh
-# Using npm
+npm start
+```
+
+In a **second** terminal, run the app:
+
+```sh
+# Android 🤖
 npm run android
 
-# OR using Yarn
-yarn android
+# iOS 🍎 (after CocoaPods install where applicable)
+npm run ios
 ```
 
-#### Physical Android device (recommended for this project)
+### 📱 Running on a physical Android phone (recommended)
 
-This app is meant for real phones first (touch, speakers, TTS). Use a USB cable and **USB debugging**:
+For touch and audio testing, a USB cable works well:
 
-1. On the phone: **Settings → About phone** → tap **Build number** seven times to enable **Developer options**.
-2. In **Developer options**, turn on **USB debugging**.
-3. Connect USB, accept the **Allow USB debugging?** RSA prompt on the phone.
-4. Confirm the machine sees the device:
+1. Enable **Developer options** on the phone and turn on **USB debugging**.
+2. Plug in the phone and confirm it appears as `device` in `adb devices`.
+3. With Metro running, run `npm run android` so the debug build installs on the phone.
 
-   ```sh
-   adb devices
-   ```
-
-   The line should show `device`, not `unauthorized`.
-
-5. From the project root, start Metro in one terminal (`npm start`), then in another run `npm run android`. With a single phone attached, React Native installs and launches the debug build on it.
-
-If the app opens but shows a red “could not connect to Metro” error, forward the bundler port:
+If the app loads but cannot reach Metro, try port forwarding:
 
 ```sh
 adb reverse tcp:8081 tcp:8081
 ```
 
-Then reload the app (shake device → Reload, or `adb shell input keyevent 82` to open the dev menu on some devices).
+More Android/setup notes may live under `docs/` in this repo (for example emulator or SDK paths on Windows).
 
-Useful logs while testing:
+---
 
-```sh
-adb logcat *:S ReactNative:V ReactNativeJS:V
-```
+## 📜 Useful scripts
 
-More Windows/SDK path notes: `docs/android-emulator-codex-guide.md`. Product defaults: `docs/project-instructions.md`.
+| Command | Purpose |
+|--------|---------|
+| `npm start` | ▶️ Start Metro. |
+| `npm run android` / `npm run ios` | 🤖🍎 Build and launch the app. |
+| `npm test` | 🧪 Run Jest tests. |
+| `npm run lint` | ✔️ ESLint. |
+| `npm run gen:sfx` | 🔊 Regenerate small UI beeps in `android/.../raw` (see `scripts/generate-sfx-wavs.mjs`). |
+| `npm run fetch:animals` | 🐾 Re-download animal sound clips (see `scripts/fetch-animal-sfx.mjs`). |
 
-### iOS
+---
 
-For iOS, remember to install CocoaPods dependencies (this only needs to be run on first clone or after updating native deps).
+## 🗂️ Project layout (where to look)
 
-The first time you create a new project, run the Ruby bundler to install CocoaPods itself:
+| Path | Role |
+|------|------|
+| `App.tsx` | 🏗️ App shell, safe areas, TTS init. |
+| `src/navigation/AppNavigator.tsx` | 🧭 All screen names and the stack. |
+| `src/screens/` | 📱 One file per full-screen activity. |
+| `src/components/` | 🧩 Reusable pieces (e.g. drifting clouds, mascots). |
+| `src/services/tts.ts` | 🗣️ Text-to-speech helpers. |
+| `src/services/sounds.ts` | 🔊 Sound effects and volume. |
+| `src/services/storage.ts` | 💾 Daily path / progress in AsyncStorage. |
+| `src/content/` | 📚 Activity definitions for “Mix n Match”. |
+| `src/theme/playgroundTheme.ts` | 🎨 Shared colors and spacing. |
+| `android/app/src/main/res/raw/` | 📂 Short sounds referenced on Android by base name. |
+| `docs/` | 📄 Extra notes—**asset sources and licenses** are tracked in `docs/assets-and-licenses.md`. |
 
-```sh
-bundle install
-```
+---
 
-Then, and every time you update your native dependencies, run:
+## 🎵 Adding or swapping sounds / images
 
-```sh
-bundle exec pod install
-```
+Follow the **asset rules** in [`docs/assets-and-licenses.md`](docs/assets-and-licenses.md). In short: prefer simple, license-friendly audio; log new files in that doc; and avoid trademarked characters or unclear rights ⚠️
 
-For more information, please visit [CocoaPods Getting Started guide](https://guides.cocoapods.org/using/getting-started.html).
+**🤖 Android gotcha:** files in `res/raw/` are named by the part *before* the extension. Do not place `thunder.mp3` and `thunder.wav` together—they would both try to be the resource `thunder` and the build will fail 💥 Keep one format per base name.
 
-```sh
-# Using npm
-npm run ios
+---
 
-# OR using Yarn
-yarn ios
-```
+## 🩹 Troubleshooting
 
-If everything is set up correctly, you should see your new app running in the Android Emulator, iOS Simulator, or your connected device.
+- **Red error about Metro:** ensure Metro is running, the device can reach the right port, and try `adb reverse` on Android.
+- **Build errors after adding raw audio:** check for duplicate base names in `res/raw/`.
+- **TTS or sound silent:** test on a real device; check system volume and that the app has not been killed in the background.
 
-This is one way to run your app — you can also build it directly from Android Studio or Xcode.
+For general React Native issues, see the [React Native troubleshooting](https://reactnative.dev/docs/troubleshooting) page.
 
-## Step 3: Modify your app
+---
 
-Now that you have successfully run the app, let's make changes!
+## 🤝 Contributing
 
-Open `App.tsx` in your text editor of choice and make some changes. When you save, your app will automatically update and reflect these changes — this is powered by [Fast Refresh](https://reactnative.dev/docs/fast-refresh).
+Issues and pull requests are welcome 🙌 When you change gameplay or add media, update `docs/assets-and-licenses.md` if you add files from outside the project.
 
-When you want to forcefully reload, for example to reset the state of your app, you can perform a full reload:
+---
 
-- **Android**: Press the <kbd>R</kbd> key twice or select **"Reload"** from the **Dev Menu**, accessed via <kbd>Ctrl</kbd> + <kbd>M</kbd> (Windows/Linux) or <kbd>Cmd ⌘</kbd> + <kbd>M</kbd> (macOS).
-- **iOS**: Press <kbd>R</kbd> in iOS Simulator.
+## 💜 Acknowledgments
 
-## Congratulations! :tada:
-
-You've successfully run and modified your React Native App. :partying_face:
-
-### Now what?
-
-- If you want to add this new React Native code to an existing application, check out the [Integration guide](https://reactnative.dev/docs/integration-with-existing-apps).
-- If you're curious to learn more about React Native, check out the [docs](https://reactnative.dev/docs/getting-started).
-
-# Troubleshooting
-
-If you're having issues getting the above steps to work, see the [Troubleshooting](https://reactnative.dev/docs/troubleshooting) page.
-
-# Learn More
-
-To learn more about React Native, take a look at the following resources:
-
-- [React Native Website](https://reactnative.dev) - learn more about React Native.
-- [Getting Started](https://reactnative.dev/docs/environment-setup) - an **overview** of React Native and how setup your environment.
-- [Learn the Basics](https://reactnative.dev/docs/getting-started) - a **guided tour** of the React Native **basics**.
-- [Blog](https://reactnative.dev/blog) - read the latest official React Native **Blog** posts.
-- [`@facebook/react-native`](https://github.com/facebook/react-native) - the Open Source; GitHub **repository** for React Native.
+Built with [React Native](https://reactnative.dev) and the open-source packages listed in `package.json`. Sound and asset credits are detailed in [`docs/assets-and-licenses.md`](docs/assets-and-licenses.md).

@@ -123,6 +123,15 @@ export function HomeScreen({ navigation }: Props) {
         accessibilityLabel: 'Lightning and thunder sky',
         onPress: () => navigation.navigate('Lightning'),
       },
+      {
+        id: 'moonsight',
+        title: 'Moonsight',
+        emoji: '🌙',
+        backgroundColor: '#1E3A5F',
+        borderColor: '#152A45',
+        accessibilityLabel: 'Find the moon behind the clouds',
+        onPress: () => navigation.navigate('Moonsight'),
+      },
     ],
     [navigation],
   );
